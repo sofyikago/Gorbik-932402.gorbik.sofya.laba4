@@ -1,64 +1,115 @@
 "use strict";
 
-const scores = [95, 88, 100, 45, 92, 85, 90];
+const LAB_SCORES = [95, 88, 100, 45, 92, 85, 90];
 
-function findMax(arr) {
-    let max = arr[0];
-    for (let i = 1; i < arr.length; i++) {
-        if (arr[i] > max) {
-            max = arr[i];
+const EXCELLENT_THRESHOLD = 80;
+const FAIL_THRESHOLD = 50;
+const MOTIVATION_THRESHOLD = 85;
+const DEFAULT_NAME = "студент";
+
+function findMax(scores) {
+    let max = scores[0];
+    for (let i = 1; i < scores.length; i++) {
+        if (scores[i] > max) {
+            max = scores[i];
         }
     }
     return max;
 }
 
-function filterHighScores(arr) {
-    const result = [];
-    for (const score of arr) {
-        if (score >= 80) {
-            result.push(score);
-        }
-    }
-    return result;
+function filterHighScores(scores) {
+    return scores.filter(function (score) {
+        return score >= EXCELLENT_THRESHOLD;
+    });
 }
 
-function calculateSum(arr) {
+function calculateSum(scores) {
     let sum = 0;
-    for (const score of arr) {
-        sum += score;
+    for (let i = 0; i < scores.length; i++) {
+        sum += scores[i];
     }
     return sum;
 }
 
-let name = prompt("Введите ваше имя:");
-if (name === null || name.trim() === "") {
-    name = "студент";
-} else {
-    name = name.trim();
+function countFailedWorks(scores) {
+    let count = 0;
+    for (let i = 0; i < scores.length; i++) {
+        if (scores[i] < FAIL_THRESHOLD) {
+            count++;
+        }
+    }
+    return count;
 }
 
-const highScores = filterHighScores(scores);
-const maxScore = findMax(scores);
-const sum = calculateSum(scores);
-const average = sum / scores.length;
+function calculateAverage(scores) {
+    return calculateSum(scores) / scores.length;
+}
 
-let failedCount = 0;
-for (let i = 0; i < scores.length; i++) {
-    if (scores[i] < 50) {
-        failedCount++;
+function analyzeScores(scores) {
+    return {
+        excellentCount: filterHighScores(scores).length,
+        maxScore: findMax(scores),
+        average: calculateAverage(scores),
+        failedCount: countFailedWorks(scores)
+    };
+}
+
+function askStudentName() {
+    const input = prompt("Введите ваше имя:", "");
+    if (input === null || input.trim() === "") {
+        return DEFAULT_NAME;
+    }
+    return input.trim();
+}
+
+function showGreeting(name, stats) {
+    alert(
+        "Привет, " + name + "!\n" +
+        "У вас " + stats.excellentCount + " отличных работ, " +
+        "максимальный балл – " + stats.maxScore
+    );
+}
+
+function logStatistics(stats) {
+    console.log("Средний балл: " + stats.average.toFixed(2));
+    console.log("Неудовлетворительных работ: " + stats.failedCount);
+}
+
+function logMotivation(average) {
+    if (average >= MOTIVATION_THRESHOLD) {
+        console.log("Отличная работа! Средний балл " + average.toFixed(2) +
+            " — так держать, вы на пути к красному диплому!");
+    } else {
+        console.log("Средний балл " + average.toFixed(2) + " ниже " +
+            MOTIVATION_THRESHOLD + " — мотивационное сообщение не выводится.");
     }
 }
 
-alert(
-    "Здравствуйте, " + name + "!\n" +
-    "У вас " + highScores.length + " отличных работ, максимальный балл – " + maxScore
-);
+function demonstrateMotivationCheck() {
+    const testCases = [
+        { label: "Средний выше порога", scores: [90, 95, 100, 88, 92] },
+        { label: "Средний ровно на пороге", scores: [95, 88, 100, 45, 92, 85, 90] },
+        { label: "Средний ниже порога", scores: [70, 60, 85, 45, 90, 75] }
+    ];
 
-console.log("Баллы:", scores);
-console.log("Отличные работы (>= 80):", highScores);
-console.log("Средний балл:", average.toFixed(2));
-console.log("Количество неудовлетворительных работ:", failedCount);
-
-if (average >= 85) {
-    console.log("Отличный результат, " + name + "! Так держать!");
+    console.log("--- Проверка условия «средний балл ≥ " + MOTIVATION_THRESHOLD + "» ---");
+    for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        const average = calculateAverage(testCase.scores);
+        console.log(testCase.label + ": [" + testCase.scores.join(", ") + "]");
+        logMotivation(average);
+    }
 }
+
+function main() {
+    const name = askStudentName();
+    const stats = analyzeScores(LAB_SCORES);
+
+    showGreeting(name, stats);
+    logStatistics(stats);
+    logMotivation(stats.average);
+
+    demonstrateMotivationCheck();
+}
+
+main();
